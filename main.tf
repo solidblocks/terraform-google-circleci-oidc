@@ -18,7 +18,7 @@ resource "google_iam_workload_identity_pool_provider" "circleci" {
     var.custom_attribute_mappings
   )
   oidc {
-    allowed_audiences = ["${var.circleci_org_id}"]
+    allowed_audiences = [var.circleci_org_id]
     issuer_uri        = "https://oidc.circleci.com/org/${var.circleci_org_id}"
   }
 }

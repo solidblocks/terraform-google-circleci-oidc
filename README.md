@@ -1,5 +1,7 @@
 # circleci-gcp-oidc-terraform
-Terraform plan to deploy GCP infra necessary for authenticating with GCP using CircleCI OIDC tokens.  Creates a workload identity pool, a workload identity pool provider, a service account to impersonate, and binds necessary permissions to the new service account.
+Terraform module to deploy GCP infra necessary for authenticating with GCP using CircleCI OIDC tokens.  Creates a workload identity pool, a workload identity pool provider, a service account to impersonate, and binds necessary permissions to the new service account.
+
+**Note:** This module is almost entirely based on [jtreutel/circleci-gcp-oidc-terraform](https://github.com/jtreutel/circleci-gcp-oidc-terraform)
 
 ## Requirements
 
@@ -14,12 +16,6 @@ Terraform plan to deploy GCP infra necessary for authenticating with GCP using C
 5. Run `terraform plan` and inspect proposed changes
 6. Run `terraform apply` to apply changes
 
-**Optional:** If you would like to do a sandbox deploy to test the Terraform plan using CircleCI, follow these steps:
-
-1. Enter the necessary values in terraform.tfvars.example and save your changes
-2. Run the following bash command: `cat terraform.tfvars | base64`
-3. Store the output in a CircleCI context or project-level variable named BASE64_TFVARS.
-
 
 ## Resources Created by Terraform
 
@@ -32,7 +28,7 @@ Terraform plan to deploy GCP infra necessary for authenticating with GCP using C
 
 ## Terraform Variables
 
-### Required 
+### Required
 
 | Name | Default | Description|
 |------|---------|------------|
@@ -59,22 +55,22 @@ Access to service accounts can be restricted at the workload identity pool provi
 
 Restrict access at the workload identity pool provider level by writing a CEL expression to describe which CircleCI OIDC tokens are allowed to impersonate the service accounts.  You can then set the expression as the value of variable `wip_provider_attribute_condition`.  Here are a few examples:
 
-Restrict access to a specific org and user: 
+Restrict access to a specific org and user:
 ```
-attribute.org_id=='01234567-89ab-cdef-0123-4567890abcde' && 
+attribute.org_id=='01234567-89ab-cdef-0123-4567890abcde' &&
 google.subject.matches('org/([\da-f]{4,12}-?){5}/project/([\da-f]{4,12}-?){5}/user/76543210-ba98-fedc-3210-edcba0987654')
 ```
 
 Restrict access to and org and its users with permission access a specific context:
 ```
-attribute.org_id=='01234567-89ab-cdef-0123-4567890abcde' && 
-attribute.context_id=='76543210-ba98-fedc-3210-edcba0987654' 
+attribute.org_id=='01234567-89ab-cdef-0123-4567890abcde' &&
+attribute.context_id=='76543210-ba98-fedc-3210-edcba0987654'
 ```
 
 Restrict access and org and its users with access to a specific project :
 ```
-attribute.org_id=='01234567-89ab-cdef-0123-4567890abcde' && 
-attribute.project_id=='76543210-ba98-fedc-3210-edcba0987654' 
+attribute.org_id=='01234567-89ab-cdef-0123-4567890abcde' &&
+attribute.project_id=='76543210-ba98-fedc-3210-edcba0987654'
 ```
 
 
@@ -84,28 +80,3 @@ If you choose to automatically create a new service account, you can add a singl
 
 sa_impersonation_filter_attribute = "attribute.project_id"
 sa_impersonation_filter_value = "01234567-89ab-cdef-0123-4567890abcde"
-
-
-## CI/CD Terraform Module Testing
-
-The pipeline config in this project will perform a sandbox deploy/destroy to validate the module.  The prerequsite configuration is as follows:
-
-#### GCP 
-
-- A GCP project
-- A service account in that project with a valid key
-
-#### CircleCI 
-
-The following variables should be configured in a context or at the project level:
-
-| Name | Value   | Description|
-|------|---------|------------|
-|BASE64_SA_KEY|(base-64 string)|Base-64 encoded GCP service account key.|
-|BASE64_TFVARS|(base-64 string)|Base-64 encoded contents of terraform.tfvars for your sandbox deployment target.|
-|GOOGLE_APPLICATION_CREDENTIALS|`key.json`|Path to the SA key file.|
-|GOOGLE_DNS_ZONE_NAME|(varies)|For Terraform GCP auth.|
-|GOOGLE_PROJECT|(varies)|For Terraform GCP auth.|
-|GOOGLE_REGION|(varies)|For Terraform GCP auth.|
-|GOOGLE_ZONE|(varies)|For Terraform GCP auth.|
-
